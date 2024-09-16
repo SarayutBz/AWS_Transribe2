@@ -1,30 +1,25 @@
 <template>
-  <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </nav>
-  <router-view />
+  <div id="app">
+    <h1>Upload MP3 and Transcribe</h1>
+    <input type="file" @change="handleFileUpload" />
+
+    <!-- Dropdown สำหรับเลือกภาษา -->
+    <label for="language">Select Language:</label>
+    <select v-model="selectedLanguage">
+      <option value="en-US">English (US)</option>
+      <option value="th-TH">Thai (Thailand)</option>
+      <option value="zh-CN">Chinese (Mandarin)</option>
+      <option value="ja-JP">Japanese</option>
+      <option value="ko-KR">Korean</option>
+      <!-- เพิ่มภาษาตามต้องการ -->
+    </select>
+
+    <button @click="uploadFile">Upload File</button>
+    <br />
+    <button @click="getTranscriptionResult" :disabled="!jobComplete">
+      Get Transcription Result
+    </button>
+    <p>{{ transcriptionResult }}</p>
+    <p v-if="errorMessage" style="color: red">{{ errorMessage }}</p>
+  </div>
 </template>
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-
-nav {
-  padding: 30px;
-}
-
-nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-nav a.router-link-exact-active {
-  color: #42b983;
-}
-</style>
