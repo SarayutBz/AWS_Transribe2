@@ -1,29 +1,30 @@
 <template>
-  <div id="app" class="container mx-auto p-6">
-    <h1 class="text-4xl font-bold text-center text-blue-600 mb-6">
+  <div id="app" class="container mx-auto p-8 bg-white rounded-lg shadow-md">
+    <!-- หัวข้อหลัก -->
+    <h1 class="text-4xl font-bold text-center text-blue-600 mb-8">
       Upload or Record Audio
     </h1>
 
-    <!-- อัปโหลดไฟล์ -->
-    <div class="mb-4">
-      <label class="block text-lg font-medium text-gray-700 mb-2"
-        >Upload MP3 File:</label
-      >
+    <!-- การอัปโหลดไฟล์ -->
+    <div class="mb-6">
+      <label class="block text-lg font-medium text-gray-700 mb-3">
+        Upload MP3 File:
+      </label>
       <input
         type="file"
         @change="handleFileUpload"
-        class="block w-full text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
+        class="block w-full text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
       />
     </div>
 
     <!-- เลือกภาษา -->
-    <div class="mb-4">
-      <label class="block text-lg font-medium text-gray-700 mb-2" for="language"
-        >Select Language:</label
-      >
+    <div class="mb-6">
+      <label class="block text-lg font-medium text-gray-700 mb-3">
+        Select Language:
+      </label>
       <select
         v-model="selectedLanguage"
-        class="block w-full px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        class="block w-full px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
       >
         <option value="en-US">English (US)</option>
         <option value="th-TH">Thai (Thailand)</option>
@@ -34,73 +35,118 @@
     </div>
 
     <!-- ปุ่มอัปโหลด -->
-    <div class="mb-6 text-center">
+    <div class="text-center mb-6">
       <button
         @click="uploadFileToS3"
         :disabled="isUploading || !file"
-        class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 disabled:opacity-50"
+        class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-full shadow hover:bg-blue-700 disabled:opacity-50 transition-all duration-300 ease-in-out"
       >
         Upload File
       </button>
     </div>
 
+    <!-- โหลดไฟล์ -->
+    <div v-if="isUploading" class="text-center mb-6">
+      <div class="loader"></div>
+      <p class="text-gray-500">Uploading file... Please wait.</p>
+    </div>
+
     <!-- อัดเสียง -->
-    <div class="mb-6 text-center">
+    <div class="flex justify-center mb-6 space-x-4">
       <button
         @click="startRecording"
         :disabled="isRecording"
-        class="px-4 py-2 bg-green-600 text-white font-semibold rounded-md shadow hover:bg-green-700 disabled:opacity-50"
+        class="px-6 py-3 bg-green-600 text-white font-semibold rounded-full shadow hover:bg-green-700 disabled:opacity-50 transition-all duration-300 ease-in-out"
       >
         Start Recording
       </button>
       <button
         @click="stopRecording"
         :disabled="!isRecording"
-        class="ml-4 px-4 py-2 bg-red-600 text-white font-semibold rounded-md shadow hover:bg-red-700 disabled:opacity-50"
+        class="px-6 py-3 bg-red-600 text-white font-semibold rounded-full shadow hover:bg-red-700 disabled:opacity-50 transition-all duration-300 ease-in-out"
       >
         Stop Recording
       </button>
     </div>
 
     <!-- ปุ่มเริ่มถอดความ -->
-    <div class="mb-6 text-center">
+    <div class="text-center mb-6">
       <button
         @click="transcribeFile"
         :disabled="!fileUrl || isTranscribing"
-        class="px-4 py-2 bg-purple-600 text-white font-semibold rounded-md shadow hover:bg-purple-700 disabled:opacity-50"
+        class="px-6 py-3 bg-purple-600 text-white font-semibold rounded-full shadow hover:bg-purple-700 disabled:opacity-50 transition-all duration-300 ease-in-out"
       >
         Start Transcription
       </button>
     </div>
 
-    <!-- ปุ่มรับผลลัพธ์ -->
-    <div class="mb-6 text-center">
+    <!-- โหลดถอดความ -->
+    <div v-if="isTranscribing" class="text-center mb-6">
+      <div class="loader"></div>
+      <p class="text-gray-500">Transcribing... Please wait.</p>
+    </div>
+
+    <!-- ปุ่มดึงผลลัพธ์ -->
+    <div class="text-center mb-6">
       <button
         @click="getTranscriptionResult"
         :disabled="!jobId || isFetchingResult"
-        class="px-4 py-2 bg-yellow-600 text-white font-semibold rounded-md shadow hover:bg-yellow-700 disabled:opacity-50"
+        class="px-6 py-3 bg-yellow-600 text-white font-semibold rounded-full shadow hover:bg-yellow-700 disabled:opacity-50 transition-all duration-300 ease-in-out"
       >
         Get Transcription Result
       </button>
     </div>
 
-    <!-- แสดงผลลัพธ์การถอดความ -->
+    <!-- โหลดผลลัพธ์ -->
+    <div v-if="isFetchingResult" class="text-center mb-6">
+      <div class="loader"></div>
+      <p class="text-gray-500">Fetching transcription result... Please wait.</p>
+    </div>
+
+    <!-- สถานะ -->
+    <div
+      v-if="statusMessage"
+      class="bg-gray-100 p-4 rounded-lg shadow-md text-center mb-6"
+    >
+      <p class="text-gray-600">{{ statusMessage }}</p>
+    </div>
+
+    <!-- ผลลัพธ์การถอดความ -->
     <div
       v-if="transcriptionResult"
-      class="bg-gray-100 p-4 rounded-lg shadow-md"
+      class="bg-gray-100 p-6 rounded-lg shadow-md"
     >
-      <h2 class="text-lg font-bold text-gray-700 mb-2">
+      <h2 class="text-lg font-bold text-gray-700 mb-3">
         Transcription Result:
       </h2>
       <p class="text-gray-600">{{ transcriptionResult }}</p>
     </div>
 
     <!-- ข้อความแสดงข้อผิดพลาด -->
-    <p v-if="errorMessage" class="text-red-600 text-center mt-4">
+    <p v-if="errorMessage" class="text-red-600 text-center mt-6">
       {{ errorMessage }}
     </p>
   </div>
 </template>
+
+<style scoped>
+/* Loading spinner style */
+.loader {
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-left-color: #4b9cdb;
+  height: 36px;
+  width: 36px;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>
 
 <script>
 import axios from "axios";
@@ -121,6 +167,7 @@ export default {
       mediaRecorder: null,
       audioChunks: [],
       file: null,
+      statusMessage: "",
     };
   },
   methods: {
@@ -139,7 +186,7 @@ export default {
           await this.uploadFile(this.file, presignedUrl);
         }
       } catch (error) {
-        this.errorMessage = error.message;
+        this.errorMessage = error.response?.data || "Error during file upload";
         console.error("Error during file upload:", error);
       } finally {
         this.isUploading = false;
@@ -177,6 +224,7 @@ export default {
       if (!this.fileUrl) return;
 
       this.isTranscribing = true;
+      this.statusMessage = "Transcribing... Please wait.";
       try {
         const response = await axios.post(
           "https://kpf28u1ty3.execute-api.ap-southeast-2.amazonaws.com/dev/transcription",
@@ -186,12 +234,43 @@ export default {
           }
         );
         this.jobId = response.data.job_id;
+        await this.checkTranscriptionStatus();
       } catch (error) {
         this.errorMessage =
           error.response?.data || "Error starting transcription";
         console.error("Error starting transcription:", error);
       } finally {
         this.isTranscribing = false;
+        this.statusMessage = "";
+      }
+    },
+
+    async checkTranscriptionStatus() {
+      if (!this.jobId) return;
+
+      try {
+        let isJobComplete = false;
+        while (!isJobComplete) {
+          const response = await axios.get(
+            "https://kpf28u1ty3.execute-api.ap-southeast-2.amazonaws.com/dev/transcription-status",
+            { params: { job_id: this.jobId } }
+          );
+
+          const status = response.data.status;
+          if (status === "COMPLETED") {
+            isJobComplete = true;
+          } else if (status === "FAILED") {
+            throw new Error("Transcription job failed");
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 5000)); // รอ 5 วินาทีแล้วตรวจสอบอีกครั้ง
+        }
+
+        this.getTranscriptionResult();
+      } catch (error) {
+        this.errorMessage =
+          error.response?.data || "Error checking transcription status";
+        console.error("Error checking transcription status:", error);
       }
     },
 
@@ -202,21 +281,13 @@ export default {
       try {
         const response = await axios.get(
           "https://kpf28u1ty3.execute-api.ap-southeast-2.amazonaws.com/dev/transcription-result",
-          {
-            params: { job_id: this.jobId },
-          }
+          { params: { job_id: this.jobId } }
         );
-
-        if (response.data.results?.transcripts) {
-          this.transcriptionResult = response.data.results.transcripts
-            .map((transcript) => transcript.transcript)
-            .join(" ");
-        } else {
-          throw new Error("Transcription result is not available");
-        }
+        this.transcriptionResult =
+          response.data.results.transcripts[0].transcript;
       } catch (error) {
         this.errorMessage =
-          error.response?.data?.error || "Error fetching transcription result";
+          error.response?.data || "Error fetching transcription result";
         console.error("Error fetching transcription result:", error);
       } finally {
         this.isFetchingResult = false;
@@ -224,9 +295,6 @@ export default {
     },
 
     startRecording() {
-      this.isRecording = true;
-      this.audioChunks = [];
-
       navigator.mediaDevices
         .getUserMedia({ audio: true })
         .then((stream) => {
@@ -234,31 +302,29 @@ export default {
           this.mediaRecorder.ondataavailable = (event) => {
             this.audioChunks.push(event.data);
           };
+          this.mediaRecorder.onstop = this.handleStopRecording;
           this.mediaRecorder.start();
+          this.isRecording = true;
         })
         .catch((error) => {
-          this.errorMessage = "Could not start recording: " + error.message;
-          console.error("Recording error:", error);
+          this.errorMessage =
+            error.message || "Error accessing microphone for recording";
+          console.error("Error accessing microphone:", error);
         });
     },
 
     stopRecording() {
-      if (this.mediaRecorder) {
+      if (this.mediaRecorder && this.isRecording) {
         this.mediaRecorder.stop();
-        this.isRecording = false;
-        this.mediaRecorder.onstop = async () => {
-          const audioBlob = new Blob(this.audioChunks, { type: "audio/mpeg" });
-          this.file = new File([audioBlob], "recording.mp3", {
-            type: "audio/mpeg",
-          });
-          await this.uploadFileToS3();
-        };
       }
+    },
+
+    handleStopRecording() {
+      const audioBlob = new Blob(this.audioChunks, { type: "audio/mp3" });
+      this.file = new File([audioBlob], "recording.mp3", { type: "audio/mp3" });
+      this.audioChunks = [];
+      this.isRecording = false;
     },
   },
 };
 </script>
-
-<style scoped>
-/* ไม่มี CSS แบบกำหนดเองเพิ่มเติม เพราะใช้ Tailwind CSS */
-</style>
