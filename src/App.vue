@@ -3,7 +3,6 @@
     <h1>Upload MP3 and Transcribe</h1>
     <input type="file" @change="handleFileUpload" />
 
-    <!-- Dropdown สำหรับเลือกภาษา -->
     <label for="language">Select Language:</label>
     <select v-model="selectedLanguage">
       <option value="en-US">English (US)</option>
@@ -13,12 +12,24 @@
       <option value="ko-KR">Korean</option>
     </select>
 
-    <button @click="uploadFile">Upload File</button>
-    <br />
-    <button @click="getTranscriptionResult" :disabled="!jobId">
+    <!-- ปุ่มสำหรับอัปโหลดไฟล์ -->
+    <button @click="uploadFileToS3" :disabled="isUploading || !file">
+      Upload File
+    </button>
+
+    <!-- ปุ่มสำหรับเริ่มการถอดความหลังจากไฟล์ถูกอัปโหลด -->
+    <button @click="transcribeFile" :disabled="!fileUrl || isTranscribing">
+      Start Transcription
+    </button>
+
+    <button
+      @click="getTranscriptionResult"
+      :disabled="!jobId || isFetchingResult"
+    >
       Get Transcription Result
     </button>
-    <p>{{ transcriptionResult }}</p>
+
+    <p v-if="transcriptionResult">{{ transcriptionResult }}</p>
     <p v-if="errorMessage" style="color: red">{{ errorMessage }}</p>
   </div>
 </template>
@@ -34,7 +45,11 @@ export default {
       jobId: null,
       transcriptionResult: "",
       errorMessage: "",
-      fileUrl: "", // เก็บ URL ของไฟล์หลังการอัปโหลด
+      fileUrl: "",
+      isUploading: false,
+      isTranscribing: false,
+      isFetchingResult: false,
+      file: null, // เก็บไฟล์ที่เลือก
     };
   },
   methods: {
@@ -43,78 +58,73 @@ export default {
         const response = await axios.post(
           "https://kpf28u1ty3.execute-api.ap-southeast-2.amazonaws.com/dev/presigned-url"
         );
-        if (response.data && response.data.pre_signed_url) {
-          console.log("Presigned URL fetched:", response.data.pre_signed_url);
-          return response.data;
-        } else {
-          throw new Error("Invalid response from presigned URL API");
-        }
+        return response.data?.pre_signed_url ?? null;
       } catch (error) {
-        console.error("Error fetching presigned URL:", error);
         this.errorMessage =
           error.response?.data || "Error fetching presigned URL";
         return null;
       }
     },
-    async handleFileUpload(event) {
-      const file = event.target.files[0];
-      if (file) {
-        try {
-          const presignedData = await this.getPresignedUrl();
-          if (presignedData && presignedData.pre_signed_url) {
-            this.fileUrl = presignedData.pre_signed_url.split("?")[0]; // Set URL ของไฟล์เพื่อใช้ในการ transcribe
-            await this.uploadFile(file, presignedData);
-          }
-        } catch (error) {
-          console.error("Error handling file upload:", error);
+
+    handleFileUpload(event) {
+      this.file = event.target.files[0];
+    },
+
+    async uploadFileToS3() {
+      if (!this.file) return;
+
+      this.isUploading = true;
+      try {
+        const presignedUrl = await this.getPresignedUrl();
+        if (presignedUrl) {
+          this.fileUrl = presignedUrl.split("?")[0];
+          await this.uploadFile(this.file, presignedUrl);
         }
+      } catch (error) {
+        this.errorMessage = error.message;
+      } finally {
+        this.isUploading = false;
       }
     },
-    async uploadFile(file, presignedData) {
-      try {
-        console.log("Uploading file to S3 with URL:", this.fileUrl);
 
-        const uploadResponse = await axios.put(
-          presignedData.pre_signed_url,
-          file,
-          {
-            headers: {
-              "Content-Type": file.type || "audio/mpeg",
-            },
-          }
-        );
-        console.log("File uploaded successfully:", uploadResponse.status);
-        await this.transcribeFile(); // เรียกใช้ฟังก์ชัน transcription หลังการอัปโหลดสำเร็จ
+    async uploadFile(file, presignedUrl) {
+      try {
+        await axios.put(presignedUrl, file, {
+          headers: {
+            "Content-Type": file.type || "audio/mpeg",
+          },
+        });
       } catch (error) {
-        console.error("Error uploading file:", error);
         this.errorMessage = error.response?.data || "Error uploading file";
       }
     },
+
     async transcribeFile() {
+      if (!this.fileUrl) return;
+
+      this.isTranscribing = true;
       try {
-        // ส่ง URL และ language code ไปยัง Lambda function ที่มีอยู่
         const response = await axios.post(
           "https://kpf28u1ty3.execute-api.ap-southeast-2.amazonaws.com/dev/transcription",
           {
-            file_url: this.fileUrl, // ใช้ fileUrl จากการอัปโหลด
+            file_url: this.fileUrl,
             language_code: this.selectedLanguage,
           }
         );
-        this.jobId = response.data.job_id; // เก็บ job_id เพื่อใช้ในการดึงผลลัพธ์
-        console.log("Transcription job started with job ID:", this.jobId);
+        this.jobId = response.data.job_id;
       } catch (error) {
-        console.error("Error starting transcription:", error);
         this.errorMessage =
           error.response?.data || "Error starting transcription";
+      } finally {
+        this.isTranscribing = false;
       }
     },
 
     async getTranscriptionResult() {
-      try {
-        if (!this.jobId) {
-          throw new Error("Job ID is required to fetch transcription result");
-        }
+      if (!this.jobId) return;
 
+      this.isFetchingResult = true;
+      try {
         const response = await axios.get(
           "https://kpf28u1ty3.execute-api.ap-southeast-2.amazonaws.com/dev/transcription-result",
           {
@@ -122,23 +132,18 @@ export default {
           }
         );
 
-        // ตรวจสอบโครงสร้างของผลลัพธ์
-        console.log("Transcription result:", response.data);
-
-        // ตรวจสอบว่ามี 'results' และ 'transcripts'
-        if (response.data.results && response.data.results.transcripts) {
-          this.transcriptionResult =
-            response.data.results.transcripts[0].transcript;
+        if (response.data.results?.transcripts) {
+          this.transcriptionResult = response.data.results.transcripts
+            .map((transcript) => transcript.transcript)
+            .join(" ");
         } else {
           throw new Error("Transcription result is not available");
         }
       } catch (error) {
-        console.error(
-          "Error fetching transcription result:",
-          error.response ? error.response.data : error.message
-        );
         this.errorMessage =
           error.response?.data?.error || "Error fetching transcription result";
+      } finally {
+        this.isFetchingResult = false;
       }
     },
   },
@@ -153,5 +158,9 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 </style>
