@@ -97,6 +97,17 @@
       </button>
     </div>
 
+    <!-- ปุ่มสำหรับดาวน์โหลด PDF -->
+    <div class="mb-6 text-center">
+      <button
+        @click="exportPDF"
+        :disabled="!transcriptionResult"
+        class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow hover:bg-indigo-700 disabled:opacity-50"
+      >
+        Download PDF
+      </button>
+    </div>
+
     <!-- โหลดผลลัพธ์ -->
     <div v-if="isFetchingResult" class="text-center mb-6">
       <div class="loader"></div>
@@ -129,27 +140,10 @@
   </div>
 </template>
 
-<style scoped>
-/* Loading spinner style */
-.loader {
-  border: 4px solid rgba(255, 255, 255, 0.2);
-  border-left-color: #4b9cdb;
-  height: 36px;
-  width: 36px;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-</style>
-
 <script>
 import axios from "axios";
+import jsPDF from "jspdf";
+import notoSans from "@/assets/NotoSans-normal.js";
 
 export default {
   name: "App",
@@ -263,7 +257,7 @@ export default {
             throw new Error("Transcription job failed");
           }
 
-          await new Promise((resolve) => setTimeout(resolve, 5000)); // รอ 5 วินาทีแล้วตรวจสอบอีกครั้ง
+          await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait for 5 seconds before checking again
         }
 
         this.getTranscriptionResult();
@@ -302,7 +296,7 @@ export default {
           this.mediaRecorder.ondataavailable = (event) => {
             this.audioChunks.push(event.data);
           };
-          this.mediaRecorder.onstop = this.handleStopRecording;
+          this.mediaRecorder.onstop = this.handleStopRecording.bind(this);
           this.mediaRecorder.start();
           this.isRecording = true;
         })
@@ -320,11 +314,56 @@ export default {
     },
 
     handleStopRecording() {
-      const audioBlob = new Blob(this.audioChunks, { type: "audio/mp3" });
-      this.file = new File([audioBlob], "recording.mp3", { type: "audio/mp3" });
+      const audioBlob = new Blob(this.audioChunks, { type: "audio/mpeg" });
+      this.file = new File([audioBlob], "recording.mp3", {
+        type: "audio/mpeg",
+      });
       this.audioChunks = [];
       this.isRecording = false;
+    },
+
+    clearState() {
+      this.file = null;
+      this.fileUrl = "";
+      this.jobId = null;
+      this.transcriptionResult = "";
+      this.errorMessage = "";
+      this.statusMessage = "";
+      this.isUploading = false;
+      this.isTranscribing = false;
+      this.isFetchingResult = false;
+      this.isRecording = false;
+    },
+    // ฟังก์ชันสำหรับสร้างและดาวน์โหลด PDF
+    exportPDF() {
+      if (!this.transcriptionResult) return;
+
+      const doc = new jsPDF(); // สร้างอินสแตนซ์ jsPDF
+      const splitText = doc.splitTextToSize(this.transcriptionResult, 180); // แยกข้อความยาว
+      doc.text(splitText, 10, 10); // เพิ่มข้อความลงใน PDF
+      doc.save("transcription.pdf"); // ดาวน์โหลดไฟล์ PDF
     },
   },
 };
 </script>
+
+<style scoped>
+.loader {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #3498db;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 10px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+</style>
