@@ -143,7 +143,7 @@
 <script>
 import axios from "axios";
 import jsPDF from "jspdf";
-import notoSans from "@/assets/NotoSans-normal.js";
+
 
 export default {
   name: "App",
