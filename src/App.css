@@ -1,0 +1,16 @@
+.ad-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .ad-space {
+    flex: 1;
+  }
+  
+  .ad-img {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+  }
+  

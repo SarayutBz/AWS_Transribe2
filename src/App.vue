@@ -17,6 +17,33 @@
       />
     </div>
 
+<!-- พื้นที่โฆษณา บน-->
+<div class="ad-container" style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+  
+  <!-- โฆษณาที่จัดชิดซ้าย -->
+  <div class="ad-space" style="text-align: left;">
+    <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
+      <img src="@/assets/BB3.webp" alt="คลิกที่นี้...เดี๋ยวนี้" style="width: 200px; height: auto;">
+    </a>
+  </div>
+  
+  <!-- โฆษณาที่จัดตรงกลาง -->
+  <div class="ad-space" style="text-align: center;">
+    <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
+      <img src="@/assets/BB3.webp" alt="คลิกที่นี้...เดี๋ยวนี้" style="width: 200px; height: auto;">
+    </a>
+  </div>
+
+  <!-- โฆษณาที่จัดตรงขวา -->
+  <div class="ad-space" style="text-align: right;">
+    <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
+      <img src="@/assets/BB3.webp" alt="คลิกที่นี้...เดี๋ยวนี้" style="width: 200px; height: auto;">
+    </a>
+  </div>
+  
+</div>
+
+
     <!-- เลือกภาษา -->
     <div class="mb-6">
       <label class="block text-lg font-medium text-gray-700 mb-3">
@@ -44,6 +71,8 @@
         Upload File
       </button>
     </div>
+
+    
 
     <!-- โหลดไฟล์ -->
     <div v-if="isUploading" class="text-center mb-6">
@@ -108,6 +137,36 @@
       </button>
     </div>
 
+
+    <!-- พื้นที่โฆษณา ล่าง -->
+<div class="ad-container" style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+  
+  <!-- โฆษณาที่จัดชิดซ้าย -->
+  <div class="ad-space" style="text-align: left;">
+    <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
+      <img src="@/assets/BB3.webp" alt="คลิกที่นี้...เดี๋ยวนี้" style="width: 200px; height: auto;">
+    </a>
+  </div>
+  
+  <!-- โฆษณาที่จัดตรงกลาง -->
+  <div class="ad-space" style="text-align: center;">
+    <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
+      <img src="@/assets/BB3.webp" alt="คลิกที่นี้...เดี๋ยวนี้" style="width: 200px; height: auto;">
+    </a>
+  </div>
+
+  <!-- โฆษณาที่จัดตรงขวา -->
+  <div class="ad-space" style="text-align: right;">
+    <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
+      <img src="@/assets/BB3.webp" alt="คลิกที่นี้...เดี๋ยวนี้" style="width: 200px; height: auto;">
+    </a>
+  </div>
+  
+</div>
+
+
+
+
     <!-- โหลดผลลัพธ์ -->
     <div v-if="isFetchingResult" class="text-center mb-6">
       <div class="loader"></div>
@@ -138,6 +197,7 @@
       {{ errorMessage }}
     </p>
   </div>
+  
 </template>
 
 <script>
