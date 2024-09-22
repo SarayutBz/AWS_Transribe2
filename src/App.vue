@@ -3,13 +3,13 @@
     <div class="max-w-7xl mx-auto bg-white rounded-lg shadow-lg p-10">
       <!-- Header -->
       <h1 class="text-5xl font-extrabold text-gray-800 text-center mb-12">
-        Audio Transcription Service
+        SeangSangDai
       </h1>
 
       <!-- Open Modal Button -->
       <div class="text-center mb-6">
-        <button 
-          @click="showModal = true" 
+        <button
+          @click="showModal = true"
           class="py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300"
         >
           Help
@@ -118,16 +118,24 @@
       <!-- Loader Section -->
       <div v-if="isFetchingResult" class="mt-10 text-center">
         <div class="loader"></div>
-        <p class="text-gray-500">Fetching transcription result... Please wait.</p>
+        <p class="text-gray-500">
+          Fetching transcription result... Please wait.
+        </p>
       </div>
 
       <!-- Status Message -->
-      <div v-if="statusMessage" class="mt-10 p-4 bg-gray-100 rounded-lg text-center shadow-md">
+      <div
+        v-if="statusMessage"
+        class="mt-10 p-4 bg-gray-100 rounded-lg text-center shadow-md"
+      >
         <p class="text-gray-600">{{ statusMessage }}</p>
       </div>
 
       <!-- Transcription Result Section -->
-      <div v-if="transcriptionResult" class="mt-10 p-6 bg-gray-50 rounded-lg shadow-md">
+      <div
+        v-if="transcriptionResult"
+        class="mt-10 p-6 bg-gray-50 rounded-lg shadow-md"
+      >
         <h2 class="text-2xl font-bold text-gray-800 mb-4">
           Transcription Result:
         </h2>
@@ -135,41 +143,78 @@
       </div>
 
       <!-- Error Message -->
-      <p v-if="errorMessage" class="mt-10 text-red-600 text-center">{{ errorMessage }}</p>
+      <p v-if="errorMessage" class="mt-10 text-red-600 text-center">
+        {{ errorMessage }}
+      </p>
 
-      <!-- Advertisement Section -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+         <!-- Advertisement Section -->
+         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
         <div class="text-center">
-          <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
-            <img src="@/assets/1.png" alt="Ad Image" class="mx-auto w-72 rounded-md shadow-md">
+          <a
+            href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d"
+            target="_blank"
+          >
+            <img
+              src="@/assets/1.png"
+              alt="Ad Image"
+              class="mx-auto w-72 rounded-md shadow-md"
+            />
           </a>
         </div>
         <div class="text-center">
-          <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
-            <img src="@/assets/2.png" alt="Ad Image" class="mx-auto w-72 rounded-md shadow-md">
+          <a
+            href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d"
+            target="_blank"
+          >
+            <img
+              src="@/assets/2.png"
+              alt="Ad Image"
+              class="mx-auto w-72 rounded-md shadow-md"
+            />
           </a>
         </div>
         <div class="text-center">
-          <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
-            <img src="@/assets/3.png" alt="Ad Image" class="mx-auto w-72 rounded-md shadow-md">
+          <a
+            href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d"
+            target="_blank"
+          >
+            <img
+              src="@/assets/3.png"
+              alt="Ad Image"
+              class="mx-auto w-72 rounded-md shadow-md"
+            />
           </a>
         </div>
       </div>
 
       <!-- Modal -->
-      <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+      <div
+        v-if="showModal"
+        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+      >
         <div class="bg-white rounded-lg p-6 max-w-md mx-auto">
-          <h2 class="text-xl font-bold mb-4">How to Use the Audio Transcription Service</h2>
+          <h2 class="text-xl font-bold mb-4">
+            How to Use the Audio Transcription Service
+          </h2>
           <p>1. Upload your MP3 file using the Upload section.</p>
           <p>2. Select the language of the audio from the dropdown menu.</p>
           <p>3. Click the "Upload File" button to upload your audio.</p>
-          <p>4. If you want to record audio, use the "Start Recording" and "Stop Recording" buttons.</p>
-          <p>5. Click "Start Transcription" to transcribe the uploaded or recorded audio.</p>
-          <p>6. Once transcription is done, click "Get Transcription Result" to retrieve the result.</p>
+          <p>
+            4. If you want to record audio, use the "Start Recording" and "Stop
+            Recording" buttons.
+          </p>
+          <p>
+            5. Click "Start Transcription" to transcribe the uploaded or
+            recorded audio.
+          </p>
+          <p>
+            6. Once transcription is done, click "Get Transcription Result" to
+            retrieve the result.
+          </p>
           <p>7. You can download the transcription as a PDF.</p>
           <div class="mt-4 text-right">
-            <button 
-              @click="showModal = false" 
+            <button
+              @click="showModal = false"
               class="py-2 px-4 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-300"
             >
               Close
@@ -177,34 +222,9 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </template>
-
-<style scoped>
-.loader {
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  border-left-color: #3498db;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 10px;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-button {
-  cursor: pointer;
-}
-</style>
 
 <script>
 import axios from "axios";
@@ -214,8 +234,9 @@ export default {
   name: "App",
   data() {
     return {
-      showModal: false,
       selectedLanguage: "en-US",
+      showModal: false,
+      showSuccessMessage: false,
       jobId: null,
       transcriptionResult: "",
       errorMessage: "",
@@ -236,22 +257,23 @@ export default {
     },
 
     async uploadFileToS3() {
-      if (!this.file) return;
+  if (!this.file) return;
 
-      this.isUploading = true;
-      try {
-        const presignedUrl = await this.getPresignedUrl();
-        if (presignedUrl) {
-          this.fileUrl = presignedUrl.split("?")[0];
-          await this.uploadFile(this.file, presignedUrl);
-        }
-      } catch (error) {
-        this.errorMessage = error.response?.data || "Error during file upload";
-        console.error("Error during file upload:", error);
-      } finally {
-        this.isUploading = false;
-      }
-    },
+  this.isUploading = true;
+  try {
+    const presignedUrl = await this.getPresignedUrl();
+    if (presignedUrl) {
+      this.fileUrl = presignedUrl.split("?")[0];
+      await this.uploadFile(this.file, presignedUrl);
+      alert("อัปโหลดไฟล์สำเร็จ!"); // เพิ่มการแจ้งเตือนที่นี่
+    }
+  } catch (error) {
+    this.errorMessage = error.response?.data || "Error during file upload";
+    console.error("Error during file upload:", error);
+  } finally {
+    this.isUploading = false;
+  }
+},
 
     async getPresignedUrl() {
       try {
@@ -400,6 +422,7 @@ export default {
       this.isFetchingResult = false;
       this.isRecording = false;
     },
+
     // ฟังก์ชันสำหรับสร้างและดาวน์โหลด PDF
     exportPDF() {
       if (!this.transcriptionResult) return;
@@ -412,3 +435,25 @@ export default {
   },
 };
 </script>
+
+
+<style scoped>
+.loader {
+  border: 8px solid #f3f3f3; /* Light grey */
+  border-top: 8px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 2s linear infinite;
+  margin: auto;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+</style>
