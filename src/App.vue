@@ -1,214 +1,220 @@
 <template>
-  <div id="app" class="container mx-auto p-8 bg-white rounded-lg shadow-md">
-    <!-- หัวข้อหลัก -->
-    <h1 class="text-4xl font-bold text-center text-blue-600 mb-8">
-      Upload or Record Audio
-    </h1>
+  <div class="min-h-screen bg-gray-100 py-12 px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto bg-white rounded-lg shadow-lg p-10">
+      <!-- Header -->
+      <h1 class="text-5xl font-extrabold text-gray-800 text-center mb-12">
+        Audio Transcription Service
+      </h1>
 
-    <!-- การอัปโหลดไฟล์ -->
-    <div class="mb-6">
-      <label class="block text-lg font-medium text-gray-700 mb-3">
-        Upload MP3 File:
-      </label>
-      <input
-        type="file"
-        @change="handleFileUpload"
-        class="block w-full text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
-      />
+      <!-- Open Modal Button -->
+      <div class="text-center mb-6">
+        <button 
+          @click="showModal = true" 
+          class="py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300"
+        >
+          Help
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Upload Section -->
+        <div class="space-y-4">
+          <label class="text-lg font-semibold text-gray-700 block">
+            Upload MP3 File
+          </label>
+          <div class="relative">
+            <input
+              type="file"
+              @change="handleFileUpload"
+              class="block w-full text-gray-700 py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
+
+        <!-- Language Selection -->
+        <div class="space-y-4">
+          <label class="text-lg font-semibold text-gray-700 block">
+            Select Language
+          </label>
+          <select
+            v-model="selectedLanguage"
+            class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="en-US">English (US)</option>
+            <option value="th-TH">Thai (Thailand)</option>
+            <option value="zh-CN">Chinese (Mandarin)</option>
+            <option value="ja-JP">Japanese</option>
+            <option value="ko-KR">Korean</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10">
+        <!-- Upload Button -->
+        <div class="text-center">
+          <button
+            @click="uploadFileToS3"
+            :disabled="isUploading || !file"
+            class="w-full py-3 bg-blue-600 text-white font-bold rounded-md shadow-md hover:bg-blue-700 transition duration-300 ease-in-out"
+          >
+            Upload File
+          </button>
+        </div>
+
+        <!-- Recording Buttons -->
+        <div class="flex justify-center space-x-4">
+          <button
+            @click="startRecording"
+            :disabled="isRecording"
+            class="w-full py-3 bg-green-600 text-white font-bold rounded-md shadow-md hover:bg-green-700 transition duration-300 ease-in-out"
+          >
+            Start Recording
+          </button>
+          <button
+            @click="stopRecording"
+            :disabled="!isRecording"
+            class="w-full py-3 bg-red-600 text-white font-bold rounded-md shadow-md hover:bg-red-700 transition duration-300 ease-in-out"
+          >
+            Stop Recording
+          </button>
+        </div>
+
+        <!-- Transcription Button -->
+        <div class="text-center">
+          <button
+            @click="transcribeFile"
+            :disabled="!fileUrl || isTranscribing"
+            class="w-full py-3 bg-purple-600 text-white font-bold rounded-md shadow-md hover:bg-purple-700 transition duration-300 ease-in-out"
+          >
+            Start Transcription
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10">
+        <!-- Get Result Button -->
+        <div class="text-center">
+          <button
+            @click="getTranscriptionResult"
+            :disabled="!jobId || isFetchingResult"
+            class="w-full py-3 bg-yellow-600 text-white font-bold rounded-md shadow-md hover:bg-yellow-700 transition duration-300 ease-in-out"
+          >
+            Get Transcription Result
+          </button>
+        </div>
+
+        <!-- Download PDF Button -->
+        <div class="text-center">
+          <button
+            @click="exportPDF"
+            :disabled="!transcriptionResult"
+            class="w-full py-3 bg-indigo-600 text-white font-bold rounded-md shadow-md hover:bg-indigo-700 transition duration-300 ease-in-out"
+          >
+            Download PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- Loader Section -->
+      <div v-if="isFetchingResult" class="mt-10 text-center">
+        <div class="loader"></div>
+        <p class="text-gray-500">Fetching transcription result... Please wait.</p>
+      </div>
+
+      <!-- Status Message -->
+      <div v-if="statusMessage" class="mt-10 p-4 bg-gray-100 rounded-lg text-center shadow-md">
+        <p class="text-gray-600">{{ statusMessage }}</p>
+      </div>
+
+      <!-- Transcription Result Section -->
+      <div v-if="transcriptionResult" class="mt-10 p-6 bg-gray-50 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">
+          Transcription Result:
+        </h2>
+        <p class="text-gray-600">{{ transcriptionResult }}</p>
+      </div>
+
+      <!-- Error Message -->
+      <p v-if="errorMessage" class="mt-10 text-red-600 text-center">{{ errorMessage }}</p>
+
+      <!-- Advertisement Section -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+        <div class="text-center">
+          <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
+            <img src="@/assets/1.png" alt="Ad Image" class="mx-auto w-72 rounded-md shadow-md">
+          </a>
+        </div>
+        <div class="text-center">
+          <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
+            <img src="@/assets/2.png" alt="Ad Image" class="mx-auto w-72 rounded-md shadow-md">
+          </a>
+        </div>
+        <div class="text-center">
+          <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
+            <img src="@/assets/3.png" alt="Ad Image" class="mx-auto w-72 rounded-md shadow-md">
+          </a>
+        </div>
+      </div>
+
+      <!-- Modal -->
+      <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-lg p-6 max-w-md mx-auto">
+          <h2 class="text-xl font-bold mb-4">How to Use the Audio Transcription Service</h2>
+          <p>1. Upload your MP3 file using the Upload section.</p>
+          <p>2. Select the language of the audio from the dropdown menu.</p>
+          <p>3. Click the "Upload File" button to upload your audio.</p>
+          <p>4. If you want to record audio, use the "Start Recording" and "Stop Recording" buttons.</p>
+          <p>5. Click "Start Transcription" to transcribe the uploaded or recorded audio.</p>
+          <p>6. Once transcription is done, click "Get Transcription Result" to retrieve the result.</p>
+          <p>7. You can download the transcription as a PDF.</p>
+          <div class="mt-4 text-right">
+            <button 
+              @click="showModal = false" 
+              class="py-2 px-4 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-300"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
-
-<!-- พื้นที่โฆษณา บน-->
-<div class="ad-container" style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-  
-  <!-- โฆษณาที่จัดชิดซ้าย -->
-  <div class="ad-space" style="text-align: left;">
-    <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
-      <img src="@/assets/BB3.webp" alt="คลิกที่นี้...เดี๋ยวนี้" style="width: 200px; height: auto;">
-    </a>
   </div>
-  
-  <!-- โฆษณาที่จัดตรงกลาง -->
-  <div class="ad-space" style="text-align: center;">
-    <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
-      <img src="@/assets/BB3.webp" alt="คลิกที่นี้...เดี๋ยวนี้" style="width: 200px; height: auto;">
-    </a>
-  </div>
-
-  <!-- โฆษณาที่จัดตรงขวา -->
-  <div class="ad-space" style="text-align: right;">
-    <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
-      <img src="@/assets/BB3.webp" alt="คลิกที่นี้...เดี๋ยวนี้" style="width: 200px; height: auto;">
-    </a>
-  </div>
-  
-</div>
-
-
-    <!-- เลือกภาษา -->
-    <div class="mb-6">
-      <label class="block text-lg font-medium text-gray-700 mb-3">
-        Select Language:
-      </label>
-      <select
-        v-model="selectedLanguage"
-        class="block w-full px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-      >
-        <option value="en-US">English (US)</option>
-        <option value="th-TH">Thai (Thailand)</option>
-        <option value="zh-CN">Chinese (Mandarin)</option>
-        <option value="ja-JP">Japanese</option>
-        <option value="ko-KR">Korean</option>
-      </select>
-    </div>
-
-    <!-- ปุ่มอัปโหลด -->
-    <div class="text-center mb-6">
-      <button
-        @click="uploadFileToS3"
-        :disabled="isUploading || !file"
-        class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-full shadow hover:bg-blue-700 disabled:opacity-50 transition-all duration-300 ease-in-out"
-      >
-        Upload File
-      </button>
-    </div>
-
-    
-
-    <!-- โหลดไฟล์ -->
-    <div v-if="isUploading" class="text-center mb-6">
-      <div class="loader"></div>
-      <p class="text-gray-500">Uploading file... Please wait.</p>
-    </div>
-
-    <!-- อัดเสียง -->
-    <div class="flex justify-center mb-6 space-x-4">
-      <button
-        @click="startRecording"
-        :disabled="isRecording"
-        class="px-6 py-3 bg-green-600 text-white font-semibold rounded-full shadow hover:bg-green-700 disabled:opacity-50 transition-all duration-300 ease-in-out"
-      >
-        Start Recording
-      </button>
-      <button
-        @click="stopRecording"
-        :disabled="!isRecording"
-        class="px-6 py-3 bg-red-600 text-white font-semibold rounded-full shadow hover:bg-red-700 disabled:opacity-50 transition-all duration-300 ease-in-out"
-      >
-        Stop Recording
-      </button>
-    </div>
-
-    <!-- ปุ่มเริ่มถอดความ -->
-    <div class="text-center mb-6">
-      <button
-        @click="transcribeFile"
-        :disabled="!fileUrl || isTranscribing"
-        class="px-6 py-3 bg-purple-600 text-white font-semibold rounded-full shadow hover:bg-purple-700 disabled:opacity-50 transition-all duration-300 ease-in-out"
-      >
-        Start Transcription
-      </button>
-    </div>
-
-    <!-- โหลดถอดความ -->
-    <div v-if="isTranscribing" class="text-center mb-6">
-      <div class="loader"></div>
-      <p class="text-gray-500">Transcribing... Please wait.</p>
-    </div>
-
-    <!-- ปุ่มดึงผลลัพธ์ -->
-    <div class="text-center mb-6">
-      <button
-        @click="getTranscriptionResult"
-        :disabled="!jobId || isFetchingResult"
-        class="px-6 py-3 bg-yellow-600 text-white font-semibold rounded-full shadow hover:bg-yellow-700 disabled:opacity-50 transition-all duration-300 ease-in-out"
-      >
-        Get Transcription Result
-      </button>
-    </div>
-
-    <!-- ปุ่มสำหรับดาวน์โหลด PDF -->
-    <div class="mb-6 text-center">
-      <button
-        @click="exportPDF"
-        :disabled="!transcriptionResult"
-        class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow hover:bg-indigo-700 disabled:opacity-50"
-      >
-        Download PDF
-      </button>
-    </div>
-
-
-    <!-- พื้นที่โฆษณา ล่าง -->
-<div class="ad-container" style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-  
-  <!-- โฆษณาที่จัดชิดซ้าย -->
-  <div class="ad-space" style="text-align: left;">
-    <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
-      <img src="@/assets/BB3.webp" alt="คลิกที่นี้...เดี๋ยวนี้" style="width: 200px; height: auto;">
-    </a>
-  </div>
-  
-  <!-- โฆษณาที่จัดตรงกลาง -->
-  <div class="ad-space" style="text-align: center;">
-    <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
-      <img src="@/assets/BB3.webp" alt="คลิกที่นี้...เดี๋ยวนี้" style="width: 200px; height: auto;">
-    </a>
-  </div>
-
-  <!-- โฆษณาที่จัดตรงขวา -->
-  <div class="ad-space" style="text-align: right;">
-    <a href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d" target="_blank">
-      <img src="@/assets/BB3.webp" alt="คลิกที่นี้...เดี๋ยวนี้" style="width: 200px; height: auto;">
-    </a>
-  </div>
-  
-</div>
-
-
-
-
-    <!-- โหลดผลลัพธ์ -->
-    <div v-if="isFetchingResult" class="text-center mb-6">
-      <div class="loader"></div>
-      <p class="text-gray-500">Fetching transcription result... Please wait.</p>
-    </div>
-
-    <!-- สถานะ -->
-    <div
-      v-if="statusMessage"
-      class="bg-gray-100 p-4 rounded-lg shadow-md text-center mb-6"
-    >
-      <p class="text-gray-600">{{ statusMessage }}</p>
-    </div>
-
-    <!-- ผลลัพธ์การถอดความ -->
-    <div
-      v-if="transcriptionResult"
-      class="bg-gray-100 p-6 rounded-lg shadow-md"
-    >
-      <h2 class="text-lg font-bold text-gray-700 mb-3">
-        Transcription Result:
-      </h2>
-      <p class="text-gray-600">{{ transcriptionResult }}</p>
-    </div>
-
-    <!-- ข้อความแสดงข้อผิดพลาด -->
-    <p v-if="errorMessage" class="text-red-600 text-center mt-6">
-      {{ errorMessage }}
-    </p>
-  </div>
-  
 </template>
+
+<style scoped>
+.loader {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #3498db;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 10px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+button {
+  cursor: pointer;
+}
+</style>
 
 <script>
 import axios from "axios";
 import jsPDF from "jspdf";
 
-
 export default {
   name: "App",
   data() {
     return {
+      showModal: false,
       selectedLanguage: "en-US",
       jobId: null,
       transcriptionResult: "",
@@ -406,24 +412,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-.loader {
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  border-left-color: #3498db;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 10px;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-</style>
