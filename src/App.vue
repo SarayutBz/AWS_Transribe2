@@ -2,9 +2,15 @@
   <div class="min-h-screen bg-gray-100 py-12 px-6 lg:px-8">
     <div class="max-w-7xl mx-auto bg-white rounded-lg shadow-lg p-10">
       <!-- Header -->
-      <div class="flex justify-center items-center ">
-        <img src="@/assets/logo1.png" alt="Logo" width="150px" height="150px" />
-        <h1 class="text-5xl font-extrabold text-gray-800">SeangSangDai</h1>
+      <div class="flex flex-col justify-center items-center text-center m-5">
+        <img
+          src="@/assets/logo1.png"
+          alt="Logo"
+          class="w-36 h-36 md:w-48 md:h-48"
+        />
+        <h1 class="text-3xl md:text-5xl font-extrabold text-gray-800 mt-4">
+          SeangSangDai
+        </h1>
       </div>
 
       <!-- Open Modal Button -->
@@ -113,6 +119,7 @@
           >
             Download PDF
           </button>
+          <p class="mt-2 text-gray-600 text-lg font-semibold italic">Support Only English</p>
         </div>
       </div>
 
@@ -120,7 +127,7 @@
       <div v-if="isFetchingResult" class="mt-10 text-center">
         <div class="loader"></div>
         <p class="text-gray-500">
-          Fetching transcription result... Please wait.
+          Fetching transcription result... Please wait...
         </p>
       </div>
 
@@ -208,11 +215,11 @@
             5. Click "Start Transcription" to transcribe the uploaded or
             recorded audio.
           </p>
-          <p>
+          <!-- <p>
             6. Once transcription is done, click "Get Transcription Result" to
             retrieve the result.
-          </p>
-          <p>7. You can download the transcription as a PDF.</p>
+          </p> -->
+          <p>6. You can download the transcription as a PDF.</p>
           <div class="mt-4 text-right">
             <button
               @click="showModal = false"
@@ -427,19 +434,12 @@ export default {
     // ฟังก์ชันสำหรับสร้างและดาวน์โหลด PDF
     exportPDF() {
       if (!this.transcriptionResult) return;
-
-      // ตรวจสอบว่า transcriptionResult มีอักษรที่ไม่ใช่ภาษาอังกฤษ
-      const hasUnsupportedChars = /[^\x00-\x7F]/.test(this.transcriptionResult);
-
-      if (hasUnsupportedChars) {
         const doc = new jsPDF(); // สร้างอินสแตนซ์ jsPDF
         const splitText = doc.splitTextToSize(this.transcriptionResult, 180); // แยกข้อความยาว
         doc.text(splitText, 10, 10); // เพิ่มข้อความลงใน PDF
         doc.save("transcription.pdf"); // ดาวน์โหลดไฟล์ PDF
-      } else {
-        this.errorMessage =
-          "PDF only supports Thai, Chinese, Korean, and Japanese text.";
-      }
+      
+       
     },
   },
 };
