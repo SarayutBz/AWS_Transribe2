@@ -2,14 +2,14 @@
 ## AWS Transcribe Project
 This project is a web application designed to transcribe audio files into text using AWS Transcribe. It allows users to upload audio files, processes them through AWS, and returns the transcribed text. The project integrates Amazon S3 for file storage, Amazon Transcribe for speech-to-text conversion, and Vue.js for the frontend.
 
-## Features
+## 🔨 Features
 - Upload audio files (e.g., .mp3, .wav) for transcription
 - Store uploaded files in an S3 bucket
 - Automatically process audio files using AWS Transcribe
 - Display the transcribed text on the frontend
 - Real-time updates on transcription progress
 
-## Tech Stack
+## 🔧 Tech Stack
 - **Frontend**: Vue.js
 - **Backend**: AWS Lambda (serverless architecture)
 - **File Storage**: Amazon S3
@@ -19,8 +19,7 @@ This project is a web application designed to transcribe audio files into text u
 ## Prerequisites
 Before setting up the project, ensure you have the following:
 - AWS Account
-- Node.js and npm installed
-- AWS CLI configured on your machine
+- axios and npm installed
 - Required IAM roles for S3, Transcribe, and Lambda services
 
 ## Setup Instructions
@@ -269,8 +268,21 @@ Navigate to http://localhost:8080 to access the application.
 3. A Lambda function is triggered to process the file with AWS Transcribe.
 4. Transcription results are stored and displayed on the frontend.
 
+## WebSite
+👉 https://seangsangdai.netlify.app/
+
+<img src="https://github.com/user-attachments/assets/9bd345a4-ae9f-49a9-aba0-177ccc1b8ce7" >
+<img src="https://github.com/user-attachments/assets/384960da-34fb-42fa-bdcb-9bfb5bfc3576">
+
+
 ## License
 This project is licensed under the MIT License.
+
+### Project Creators
+
+- **:avocado: [Sarayut Aiamaurai](https://github.com/SarayutBz)** - Project Lead and Developer :shipit:
+- **:frog: [Wongsaphat Nagmaung ](https://github.com/Bee34949)** - Backend Developer :man_technologist:
+- **:rose: [Panjapon Puakinsang](https://github.com/PanjaponPuakinsang)** - Documentation Manager :pencil:
 
 
 
