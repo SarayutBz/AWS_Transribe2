@@ -2,9 +2,10 @@
   <div class="min-h-screen bg-gray-100 py-12 px-6 lg:px-8">
     <div class="max-w-7xl mx-auto bg-white rounded-lg shadow-lg p-10">
       <!-- Header -->
-      <h1 class="text-5xl font-extrabold text-gray-800 text-center mb-12">
-        SeangSangDai
-      </h1>
+      <div class="flex justify-center items-center ">
+        <img src="@/assets/logo1.png" alt="Logo" width="150px" height="150px" />
+        <h1 class="text-5xl font-extrabold text-gray-800">SeangSangDai</h1>
+      </div>
 
       <!-- Open Modal Button -->
       <div class="text-center mb-6">
@@ -94,13 +95,13 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10">
         <!-- Get Result Button -->
         <div class="text-center">
-          <button
+          <!-- <button
             @click="getTranscriptionResult"
             :disabled="!jobId || isFetchingResult"
             class="w-full py-3 bg-yellow-600 text-white font-bold rounded-md shadow-md hover:bg-yellow-700 transition duration-300 ease-in-out"
           >
             Get Transcription Result
-          </button>
+          </button> -->
         </div>
 
         <!-- Download PDF Button -->
@@ -147,8 +148,8 @@
         {{ errorMessage }}
       </p>
 
-         <!-- Advertisement Section -->
-         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+      <!-- Advertisement Section -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
         <div class="text-center">
           <a
             href="https://youtu.be/CU77vlEZu5E?si=MDTrosJKwYBZBn0d"
@@ -257,28 +258,28 @@ export default {
     },
 
     async uploadFileToS3() {
-  if (!this.file) return;
+      if (!this.file) return;
 
-  this.isUploading = true;
-  try {
-    const presignedUrl = await this.getPresignedUrl();
-    if (presignedUrl) {
-      this.fileUrl = presignedUrl.split("?")[0];
-      await this.uploadFile(this.file, presignedUrl);
-      alert("อัปโหลดไฟล์สำเร็จ!"); // เพิ่มการแจ้งเตือนที่นี่
-    }
-  } catch (error) {
-    this.errorMessage = error.response?.data || "Error during file upload";
-    console.error("Error during file upload:", error);
-  } finally {
-    this.isUploading = false;
-  }
-},
+      this.isUploading = true;
+      try {
+        const presignedUrl = await this.getPresignedUrl();
+        if (presignedUrl) {
+          this.fileUrl = presignedUrl.split("?")[0];
+          await this.uploadFile(this.file, presignedUrl);
+          alert("อัปโหลดไฟล์สำเร็จ!"); // เพิ่มการแจ้งเตือนที่นี่
+        }
+      } catch (error) {
+        this.errorMessage = error.response?.data || "Error during file upload";
+        console.error("Error during file upload:", error);
+      } finally {
+        this.isUploading = false;
+      }
+    },
 
     async getPresignedUrl() {
       try {
         const response = await axios.post(
-          "https://kpf28u1ty3.execute-api.ap-southeast-2.amazonaws.com/dev/presigned-url"
+          `${process.env.VUE_APP_API_URL}/presigned-url`
         );
         return response.data?.pre_signed_url ?? null;
       } catch (error) {
@@ -309,7 +310,7 @@ export default {
       this.statusMessage = "Transcribing... Please wait.";
       try {
         const response = await axios.post(
-          "https://kpf28u1ty3.execute-api.ap-southeast-2.amazonaws.com/dev/transcription",
+          `${process.env.VUE_APP_API_URL}/transcription`,
           {
             file_url: this.fileUrl,
             language_code: this.selectedLanguage,
@@ -334,7 +335,7 @@ export default {
         let isJobComplete = false;
         while (!isJobComplete) {
           const response = await axios.get(
-            "https://kpf28u1ty3.execute-api.ap-southeast-2.amazonaws.com/dev/transcription-status",
+            `${process.env.VUE_APP_API_URL}/transcription-status`,
             { params: { job_id: this.jobId } }
           );
 
@@ -362,7 +363,7 @@ export default {
       this.isFetchingResult = true;
       try {
         const response = await axios.get(
-          "https://kpf28u1ty3.execute-api.ap-southeast-2.amazonaws.com/dev/transcription-result",
+          `${process.env.VUE_APP_API_URL}/transcription-result`,
           { params: { job_id: this.jobId } }
         );
         this.transcriptionResult =
@@ -427,15 +428,22 @@ export default {
     exportPDF() {
       if (!this.transcriptionResult) return;
 
-      const doc = new jsPDF(); // สร้างอินสแตนซ์ jsPDF
-      const splitText = doc.splitTextToSize(this.transcriptionResult, 180); // แยกข้อความยาว
-      doc.text(splitText, 10, 10); // เพิ่มข้อความลงใน PDF
-      doc.save("transcription.pdf"); // ดาวน์โหลดไฟล์ PDF
+      // ตรวจสอบว่า transcriptionResult มีอักษรที่ไม่ใช่ภาษาอังกฤษ
+      const hasUnsupportedChars = /[^\x00-\x7F]/.test(this.transcriptionResult);
+
+      if (hasUnsupportedChars) {
+        const doc = new jsPDF(); // สร้างอินสแตนซ์ jsPDF
+        const splitText = doc.splitTextToSize(this.transcriptionResult, 180); // แยกข้อความยาว
+        doc.text(splitText, 10, 10); // เพิ่มข้อความลงใน PDF
+        doc.save("transcription.pdf"); // ดาวน์โหลดไฟล์ PDF
+      } else {
+        this.errorMessage =
+          "PDF only supports Thai, Chinese, Korean, and Japanese text.";
+      }
     },
   },
 };
 </script>
-
 
 <style scoped>
 .loader {
