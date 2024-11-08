@@ -1,5 +1,5 @@
 <template>
-  <h3>Hellodasdadasdasdas</h3>
+
   <div class="min-h-screen bg-gray-100 py-12 px-6 lg:px-8">
     <div class="max-w-7xl mx-auto bg-white rounded-lg shadow-lg p-10">
       <!-- Header -->
